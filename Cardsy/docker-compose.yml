@@ -1,0 +1,6 @@
+services:
+  cardsy.api:
+    image: ${DOCKER_REGISTRY-}cardsyapi
+    build:
+      context: .
+      dockerfile: Cardsy.API/Dockerfile
