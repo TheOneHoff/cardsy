@@ -2,6 +2,7 @@ services:
   cardsy.api:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
-      - ASPNETCORE_HTTP_PORTS=8080
+      - ASPNETCORE_HTTP_PORTS=5000
+      # - ASPNETCORE_HTTPS_PORTS=5001
     ports:
       - "8080"
