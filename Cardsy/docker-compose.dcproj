@@ -6,7 +6,7 @@
     <DockerPublishLocally>False</DockerPublishLocally>
     <ProjectGuid>62d25917-a41f-495b-913d-295caaebc4a1</ProjectGuid>
     <DockerLaunchAction>LaunchBrowser</DockerLaunchAction>
-    <DockerServiceUrl>{Scheme}://localhost:{ServicePort}/todos</DockerServiceUrl>
+    <DockerServiceUrl>{Scheme}://localhost:{ServicePort}/scalar/v1</DockerServiceUrl>
     <DockerServiceName>cardsy.api</DockerServiceName>
   </PropertyGroup>
   <ItemGroup>
