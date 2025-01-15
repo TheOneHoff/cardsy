@@ -1,7 +1,7 @@
 using Cardsy.API.Options;
 using Cardsy.API.Services;
+using Cardsy.Data;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Scalar.AspNetCore;
 using Serilog;
 using System.Text.Json.Serialization;
@@ -11,6 +11,8 @@ Log.Logger = new LoggerConfiguration()
     .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
+bool isDevelopment = builder.Environment.IsDevelopment();
+
 
 builder.Services.Configure<Configuration>(builder.Configuration.GetSection(nameof(Configuration)));
 builder.Services.AddTransient<TestService>();
@@ -25,33 +27,25 @@ builder.Services.ConfigureHttpJsonOptions(options =>
     options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
 });
 
-//builder.Services.AddDbContext<ApplicationDbContext>(options =>
-//    options.UseNpgsql(builder.Configuration.GetConnectionString("Database")));
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Database")));
 
 builder.Services.AddStackExchangeRedisCache(options =>
     options.Configuration = builder.Configuration.GetConnectionString("Cache"));
 
 builder.Services.AddOpenApi(options =>
 {
-    if (builder.Environment.IsDevelopment())
+    if (isDevelopment)
     {
         options.AddDocumentTransformer((document, context, cancellationToken) =>
         {
-                const string development_host = "localhost";
-                document.Servers.Clear();
-                var http_port = builder.Configuration.GetValue<int>("ASPNETCORE_HTTP_PORTS");
-                document.Servers.Add(new()
-                {
-                    Url = $"http://{development_host}:{http_port}"
-                });
-                var https_port = builder.Configuration.GetValue<int?>("ASPNETCORE_HTTPS_PORTS");
-                if (https_port.HasValue)
-                {
-                    document.Servers.Add(new()
-                    {
-                        Url = $"https://{development_host}:{https_port}"
-                    });
-                }
+            const string development_host = "localhost";
+            document.Servers.Clear();
+            var https_port = builder.Configuration.GetValue<int?>("ASPNETCORE_HTTPS_PORTS");
+            document.Servers.Add(new()
+            {
+                Url = $"https://{development_host}:{https_port}"
+            });
             return Task.CompletedTask;
         });
     }
@@ -63,7 +57,6 @@ app.MapOpenApi();
 app.MapScalarApiReference();
 
 app.UseHttpsRedirection();
-
 
 var sampleTodos = new Todo[] {
     new(1, "Walk the dog"),
