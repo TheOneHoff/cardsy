@@ -7,6 +7,8 @@ services:
     build:
       context: .
       dockerfile: Cardsy.API/Dockerfile
+    volumes:
+        - ./Cardsy.API/appsettings.json:/app/appsettings.json
     ports:
         - "5000:5000"
         - "5001:5001"
