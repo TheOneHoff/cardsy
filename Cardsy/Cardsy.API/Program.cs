@@ -1,13 +1,19 @@
-using System.Text.Json.Serialization;
+using Cardsy.API.Options;
+using Cardsy.API.Services;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore.Metadata.Internal;
 using Scalar.AspNetCore;
 using Serilog;
+using System.Text.Json.Serialization;
 
 Log.Logger = new LoggerConfiguration()
     .WriteTo.Console()
     .CreateLogger();
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.Configure<Configuration>(builder.Configuration.GetSection(nameof(Configuration)));
+builder.Services.AddTransient<TestService>();
 
 builder.Host.UseSerilog();
 builder.Logging.ClearProviders();
@@ -31,7 +37,7 @@ builder.Services.AddOpenApi(options =>
     {
         options.AddDocumentTransformer((document, context, cancellationToken) =>
         {
-                var development_host = "localhost";
+                const string development_host = "localhost";
                 document.Servers.Clear();
                 var http_port = builder.Configuration.GetValue<int>("ASPNETCORE_HTTP_PORTS");
                 document.Servers.Add(new()
@@ -74,11 +80,19 @@ todosApi.MapGet("/{id}", (int id) =>
         ? Results.Ok(todo)
         : Results.NotFound());
 
+var settingsApi = app.MapGroup("/settings");
+settingsApi.MapGet("/", (TestService service) => service.Settings);
+settingsApi.MapGet("/{key}", (string key, TestService service) => service.GetSetting(key).Value is not null ? Results.Ok(service.GetSetting(key)) : Results.NotFound());
+
 app.Run();
 
 public record Todo(int Id, string? Title, DateOnly? DueBy = null, bool IsComplete = false);
 
+public record Setting(string Key, string? Value = null);
+
 [JsonSerializable(typeof(Todo[]))]
+[JsonSerializable(typeof(Setting))]
+[JsonSerializable(typeof(Setting[]))]
 internal partial class AppJsonSerializerContext : JsonSerializerContext
 {
 
