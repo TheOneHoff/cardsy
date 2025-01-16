@@ -19,8 +19,8 @@ namespace Cardsy.Data.Games.Concentration
     public enum BoardSize
     {
         _2x2,
-        _5x5,
-        _7x5,
+        _6x5,
+        _7x4,
         _7x6
     }
 }

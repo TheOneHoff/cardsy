@@ -2,6 +2,7 @@ using Cardsy.API.Games.Concentration;
 using Cardsy.API.Options;
 using Cardsy.API.Services;
 using Cardsy.Data;
+using Cardsy.Data.CompiledModels;
 using Cardsy.Data.Games.Concentration;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
@@ -34,7 +35,10 @@ internal class Program
         });
 
         builder.Services.AddDbContextPool<ApplicationDbContext>(options =>
-            options.UseNpgsql(builder.Configuration.GetConnectionString("Database")));
+        {
+            options.UseNpgsql(builder.Configuration.GetConnectionString("Database"));
+            //options.UseModel(ApplicationDbContextModel.Instance);
+        });
 
         builder.Services.AddStackExchangeRedisCache(options =>
             options.Configuration = builder.Configuration.GetConnectionString("Cache"));
