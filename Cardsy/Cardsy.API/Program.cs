@@ -2,7 +2,6 @@ using Cardsy.API.Games.Concentration;
 using Cardsy.API.Options;
 using Cardsy.API.Services;
 using Cardsy.Data;
-using Cardsy.Data.CompiledModels;
 using Cardsy.Data.Games.Concentration;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
@@ -62,9 +61,6 @@ internal class Program
         });
 
         var app = builder.Build();
-
-        using var scope = app.Services.CreateScope();
-        using var db = scope.ServiceProvider.GetRequiredService<ApplicationDbContext>();
 
         app.MapOpenApi();
         app.MapScalarApiReference();
