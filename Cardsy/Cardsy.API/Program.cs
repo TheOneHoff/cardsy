@@ -1,7 +1,9 @@
+using System.Text.Json.Serialization;
 using Cardsy.API.Games.Concentration;
 using Cardsy.API.Options;
 using Cardsy.API.Serialization;
 using Cardsy.Data;
+using Cardsy.Data.Games.Concentration;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using Serilog;
@@ -28,6 +30,7 @@ internal class Program
         builder.Services.ConfigureHttpJsonOptions(options =>
         {
             options.SerializerOptions.TypeInfoResolverChain.Insert(0, AppJsonSerializerContext.Default);
+            //options.SerializerOptions.Converters.Add(new JsonStringEnumConverter<BoardSize>());
         });
 
         builder.Services.AddDbContextPool<ApplicationDbContext>(options =>
