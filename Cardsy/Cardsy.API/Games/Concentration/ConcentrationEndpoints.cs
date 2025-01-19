@@ -2,8 +2,8 @@
 using Cardsy.Data.Games.Concentration;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.ChangeTracking;
-using static Microsoft.EntityFrameworkCore.DbLoggerCategory;
+using Microsoft.Extensions.Caching.Distributed;
+using System.Text.Json;
 
 namespace Cardsy.API.Games.Concentration
 {
@@ -42,20 +42,45 @@ namespace Cardsy.API.Games.Concentration
         public static readonly Func<ApplicationDbContext, BoardSize, int, int, IAsyncEnumerable<ConcentrationGame>> GetAllWithBoardSize
             = EF.CompileAsyncQuery(
                 (ApplicationDbContext db, BoardSize size, int take, int skip)
-                => db.ConcentrationGames.Where(c => c.Size == size).Skip(skip).Take(take));
+                => db.ConcentrationGames.Where(c => c.Size == size).OrderBy(c => c.Id).Skip(skip).Take(take));
 
         public static readonly Func<ApplicationDbContext, int, int, IAsyncEnumerable<ConcentrationGame>> GetAllWithNoBoardSize
             = EF.CompileAsyncQuery(
                 (ApplicationDbContext db, int take, int skip)
-                => db.ConcentrationGames.Skip(skip).Take(take));
+                => db.ConcentrationGames.OrderBy(c => c.Id).Skip(skip).Take(take));
 
         public static async Task<Results<Ok<ConcentrationGame>, NotFound>> Get(
             long id,
             ApplicationDbContext db,
+            IDistributedCache cache,
             CancellationToken cancellationToken
             )
         {
-            var result = await GetById(db, id).SingleOrDefaultAsync(cancellationToken);
+            ConcentrationGame? result;
+
+            string key = $"concentration-{id}";
+
+            byte[]? cachedGame = await cache.GetAsync(key, cancellationToken);
+
+            if (cachedGame is not null && cachedGame.Length > 0)
+            {
+                using Stream cachedStream = new MemoryStream(cachedGame);
+                result = await JsonSerializer.DeserializeAsync(
+                    cachedStream, 
+                    AppJsonSerializerContext.Default.ConcentrationGame, 
+                    cancellationToken);
+                return TypedResults.Ok(result);
+            }
+
+            result = await GetByIdWithNoTracking(db, id).SingleOrDefaultAsync(cancellationToken);
+
+            if (result is not null)
+            {
+                cachedGame = JsonSerializer.SerializeToUtf8Bytes(result, AppJsonSerializerContext.Default.ConcentrationGame);
+                await cache.SetAsync(key, cachedGame, cancellationToken);
+                return TypedResults.Ok(result);
+            }
+
             return result is null
                 ? TypedResults.NotFound()
                 : TypedResults.Ok(result);
@@ -65,6 +90,11 @@ namespace Cardsy.API.Games.Concentration
             = EF.CompileAsyncQuery(
                 (ApplicationDbContext db, long id)
                 => db.ConcentrationGames.Where(c => c.Id == id));
+
+        private static readonly Func<ApplicationDbContext, long, IAsyncEnumerable<ConcentrationGame?>> GetByIdWithNoTracking
+            = EF.CompileAsyncQuery(
+                (ApplicationDbContext db, long id)
+                => db.ConcentrationGames.Where(c => c.Id == id).AsNoTracking());
 
         public static async Task<Results<Created<ConcentrationGame>, BadRequest<string>>> Create(
             ConcentrationGame toCreate,

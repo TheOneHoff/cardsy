@@ -1,24 +1,24 @@
-GET {{Cardsy.API_HostAddress}}/todos/
+GET {{HostAddress}}/todos/
 Accept: application/json
 
 ###
 
-GET {{Cardsy.API_HostAddress}}/todos/1
+GET {{HostAddress}}/todos/1
 Accept: application/json
 
 ###
 
-GET {{Cardsy.API_HostAddress}}/games/concentration
+GET {{HostAddress}}/games/concentration
 Accept: application/json
 
 ###
 
-GET {{Cardsy.API_HostAddress}}/games/concentration/1
+GET {{HostAddress}}/games/concentration/1
 Accept: application/json
 
 ###
 
-POST {{Cardsy.API_HostAddress}}/games/concentration/create
+POST {{HostAddress}}/games/concentration/create
 Accept: application/json
 Content-Type: application/json
 
