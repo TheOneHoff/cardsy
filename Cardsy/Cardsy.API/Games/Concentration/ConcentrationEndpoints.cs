@@ -1,4 +1,5 @@
-﻿using Cardsy.Data;
+﻿using Cardsy.API.Serialization;
+using Cardsy.Data;
 using Cardsy.Data.Games.Concentration;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.EntityFrameworkCore;
@@ -11,7 +12,7 @@ namespace Cardsy.API.Games.Concentration
     {
         public static void MapConcentrationEndpoints(this IEndpointRouteBuilder app)
         {
-            var endpoints = app.MapGroup("/concentration");
+            var endpoints = app.MapGroup("/concentration").WithTags("Concentration");
 
             endpoints.MapGet("", GetAll);
             endpoints.MapGet("/{id}", Get);

@@ -42,4 +42,8 @@
     <ProjectReference Include="..\Cardsy.Data\Cardsy.Data.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Services\" />
+  </ItemGroup>
+
 </Project>
