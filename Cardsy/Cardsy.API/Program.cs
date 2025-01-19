@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
-using Cardsy.API.Games.Concentration;
+using Cardsy.API.Endpoints.Games.Concentration;
+using Cardsy.API.Infrastructure.Handlers;
 using Cardsy.API.Options;
 using Cardsy.API.Serialization;
 using Cardsy.Data;
@@ -60,12 +61,23 @@ internal class Program
             }
         });
 
+        if (isDevelopment)
+        {
+            builder.Services.AddExceptionHandler<DevelopmentExceptionHandler>();
+        }
+        else
+        {
+            builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
+        }
+        builder.Services.AddProblemDetails();
+
         var app = builder.Build();
 
         app.MapOpenApi();
         app.MapScalarApiReference();
 
         app.UseHttpsRedirection();
+        app.UseExceptionHandler();
 
         var gamesAPI = app.MapGroup("/games");
         gamesAPI.MapConcentrationEndpoints();

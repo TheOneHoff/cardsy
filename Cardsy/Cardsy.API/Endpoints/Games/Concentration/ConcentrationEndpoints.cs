@@ -6,7 +6,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
 
-namespace Cardsy.API.Games.Concentration
+namespace Cardsy.API.Endpoints.Games.Concentration
 {
     public static class ConcentrationEndpoints
     {
@@ -21,9 +21,9 @@ namespace Cardsy.API.Games.Concentration
 
         public static async Task<Ok<ConcentrationGame[]>> GetAll(
             ApplicationDbContext db,
-            CancellationToken cancellationToken, 
-            BoardSize? boardSize = null, 
-            int take = 200, 
+            CancellationToken cancellationToken,
+            BoardSize? boardSize = null,
+            int take = 200,
             int skip = 0)
         {
             ConcentrationGame[] result = [];
@@ -67,8 +67,8 @@ namespace Cardsy.API.Games.Concentration
             {
                 using Stream cachedStream = new MemoryStream(cachedGame);
                 result = await JsonSerializer.DeserializeAsync(
-                    cachedStream, 
-                    AppJsonSerializerContext.Default.ConcentrationGame, 
+                    cachedStream,
+                    AppJsonSerializerContext.Default.ConcentrationGame,
                     cancellationToken);
                 return TypedResults.Ok(result);
             }
@@ -144,7 +144,7 @@ namespace Cardsy.API.Games.Concentration
             if (pairs.Count == 0)
                 return false;
 
-            foreach(int i in pairs.Values)
+            foreach (int i in pairs.Values)
             {
                 if (i != 2)
                     return false;
