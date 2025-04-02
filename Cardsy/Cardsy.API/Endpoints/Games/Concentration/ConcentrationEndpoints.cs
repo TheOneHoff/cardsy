@@ -14,9 +14,10 @@ namespace Cardsy.API.Endpoints.Games.Concentration
         {
             var endpoints = app.MapGroup("/concentration").WithTags("Concentration");
 
-            endpoints.MapGet("", GetAll);
+            endpoints.MapGet("/search", GetAll);
             endpoints.MapGet("/{id}", Get);
             endpoints.MapPost("/create", Create);
+            endpoints.MapDelete("/delete/{id}", Delete);
         }
 
         public static async Task<Ok<ConcentrationGame[]>> GetAll(
@@ -43,12 +44,12 @@ namespace Cardsy.API.Endpoints.Games.Concentration
         public static readonly Func<ApplicationDbContext, BoardSize, int, int, IAsyncEnumerable<ConcentrationGame>> GetAllWithBoardSize
             = EF.CompileAsyncQuery(
                 (ApplicationDbContext db, BoardSize size, int take, int skip)
-                => db.ConcentrationGames.Where(c => c.Size == size).OrderBy(c => c.Id).Skip(skip).Take(take));
+                => db.ConcentrationGames.Where(c => c.Size == size).OrderBy(c => c.Id).Skip(skip).Take(take).AsNoTracking());
 
         public static readonly Func<ApplicationDbContext, int, int, IAsyncEnumerable<ConcentrationGame>> GetAllWithNoBoardSize
             = EF.CompileAsyncQuery(
                 (ApplicationDbContext db, int take, int skip)
-                => db.ConcentrationGames.OrderBy(c => c.Id).Skip(skip).Take(take));
+                => db.ConcentrationGames.OrderBy(c => c.Id).Skip(skip).Take(take).AsNoTracking());
 
         public static async Task<Results<Ok<ConcentrationGame>, NotFound>> Get(
             long id,
@@ -70,7 +71,9 @@ namespace Cardsy.API.Endpoints.Games.Concentration
                     cachedStream,
                     AppJsonSerializerContext.Default.ConcentrationGame,
                     cancellationToken);
-                return TypedResults.Ok(result);
+                return result is null
+                    ? TypedResults.NotFound()
+                    : TypedResults.Ok(result);
             }
 
             result = await GetByIdWithNoTracking(db, id).SingleOrDefaultAsync(cancellationToken);
@@ -82,9 +85,7 @@ namespace Cardsy.API.Endpoints.Games.Concentration
                 return TypedResults.Ok(result);
             }
 
-            return result is null
-                ? TypedResults.NotFound()
-                : TypedResults.Ok(result);
+            return TypedResults.NotFound();
         }
 
         private static readonly Func<ApplicationDbContext, long, IAsyncEnumerable<ConcentrationGame?>> GetById
@@ -97,7 +98,7 @@ namespace Cardsy.API.Endpoints.Games.Concentration
                 (ApplicationDbContext db, long id)
                 => db.ConcentrationGames.Where(c => c.Id == id).AsNoTracking());
 
-        public static async Task<Results<Created<ConcentrationGame>, BadRequest<string>>> Create(
+        public static async Task<Results<Created<ConcentrationGame>, BadRequest<string>>> Create( 
             ConcentrationGame toCreate,
             ApplicationDbContext db,
             CancellationToken cancellationToken
@@ -123,6 +124,29 @@ namespace Cardsy.API.Endpoints.Games.Concentration
             await db.SaveChangesAsync(cancellationToken);
 
             return TypedResults.Created($"/{toCreate.Id}", toCreate);
+        }
+
+        public static async Task<Results<NoContent, NotFound>> Delete(
+            long id,
+            ApplicationDbContext db,
+            IDistributedCache cache,
+            CancellationToken cancellationToken
+            )
+        {
+            ConcentrationGame? toDelete = await GetById(db, id).SingleOrDefaultAsync(cancellationToken);
+
+            if (toDelete is null)
+            {
+                return TypedResults.NotFound();
+            }
+
+            string key = $"concentration-{id}";
+            await cache.RemoveAsync(key, cancellationToken);
+
+            db.Remove(toDelete);
+            await db.SaveChangesAsync(cancellationToken);
+
+            return TypedResults.NoContent();
         }
 
         private static bool IsSolutionValid(int[] solution)

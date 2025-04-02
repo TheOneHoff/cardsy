@@ -1,32 +1,9 @@
-volumes:
-    cardsy-db:
-
 services:
   cardsy.api:
     image: ${DOCKER_REGISTRY-}cardsyapi
     build:
       context: .
       dockerfile: Cardsy.API/Dockerfile
-    volumes:
-        - ./Cardsy.API/appsettings.json:/app/appsettings.json
     ports:
         - "5000:5000"
         - "5001:5001"
-
-  cardsy.database:
-    image: postgres:latest
-    container_name: cardsy.database
-    environment: 
-        - POSTGRES_DB=cardsy
-        - POSTGRES_USER=postgres
-        - POSTGRES_PASSWORD=local
-    volumes:
-        - cardsy-db:/var/lib/postgresql/data
-    ports:
-        - 5432:5432
-
-  cardsy.cache:
-    image: redis:latest
-    restart: always
-    ports:
-        - "6379:6379"

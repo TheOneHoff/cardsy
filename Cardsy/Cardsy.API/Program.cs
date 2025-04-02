@@ -1,10 +1,7 @@
-using System.Text.Json.Serialization;
 using Cardsy.API.Endpoints.Games.Concentration;
-using Cardsy.API.Infrastructure.Handlers;
 using Cardsy.API.Options;
 using Cardsy.API.Serialization;
 using Cardsy.Data;
-using Cardsy.Data.Games.Concentration;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using Serilog;
@@ -41,7 +38,9 @@ internal class Program
         });
 
         builder.Services.AddStackExchangeRedisCache(options =>
-            options.Configuration = builder.Configuration.GetConnectionString("Cache"));
+        {
+            options.Configuration = builder.Configuration.GetConnectionString("Cache");
+        });
 
         builder.Services.AddOpenApi(options =>
         {
@@ -61,14 +60,6 @@ internal class Program
             }
         });
 
-        if (isDevelopment)
-        {
-            builder.Services.AddExceptionHandler<DevelopmentExceptionHandler>();
-        }
-        else
-        {
-            builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
-        }
         builder.Services.AddProblemDetails();
 
         var app = builder.Build();
@@ -77,7 +68,15 @@ internal class Program
         app.MapScalarApiReference();
 
         app.UseHttpsRedirection();
-        app.UseExceptionHandler();
+        app.UseExceptionHandler(new ExceptionHandlerOptions
+        {
+            StatusCodeSelector = ex => ex switch
+            {
+                BadHttpRequestException => StatusCodes.Status400BadRequest,
+                NotImplementedException => StatusCodes.Status501NotImplemented,
+                _ => StatusCodes.Status500InternalServerError
+            }
+        });
 
         var gamesAPI = app.MapGroup("/games");
         gamesAPI.MapConcentrationEndpoints();
