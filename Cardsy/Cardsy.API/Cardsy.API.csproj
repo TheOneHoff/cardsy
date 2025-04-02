@@ -16,9 +16,13 @@
   </PropertyGroup>
 	
   <ItemGroup>
+    <Compile Remove="Infrastructure\Handlers\**" />
     <Compile Remove="Services\**" />
+    <Content Remove="Infrastructure\Handlers\**" />
     <Content Remove="Services\**" />
+    <EmbeddedResource Remove="Infrastructure\Handlers\**" />
     <EmbeddedResource Remove="Services\**" />
+    <None Remove="Infrastructure\Handlers\**" />
     <None Remove="Services\**" />
   </ItemGroup>
 	
@@ -37,6 +41,7 @@
     <PackageReference Include="Microsoft.Extensions.Caching.StackExchangeRedis" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection" />
     <PackageReference Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" />
+    <PackageReference Include="Npgsql" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
     <PackageReference Include="Scalar.AspNetCore" />
     <PackageReference Include="Serilog" />
@@ -51,7 +56,7 @@
 
   <ItemGroup>
     <Folder Include="Infrastructure\Cache\" />
-    <Folder Include="Infrastructure\Handlers\" />
+    <Folder Include="Infrastructure\Database\" />
   </ItemGroup>
 
 </Project>
