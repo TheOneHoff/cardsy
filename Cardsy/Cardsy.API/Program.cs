@@ -5,6 +5,9 @@ using Cardsy.Data;
 using Microsoft.EntityFrameworkCore;
 using Scalar.AspNetCore;
 using Serilog;
+using Dapper;
+using Cardsy.Data.Database;
+using Microsoft.Extensions.Configuration;
 
 internal class Program
 {
@@ -21,9 +24,11 @@ internal class Program
         builder.Services.Configure<Configuration>(builder.Configuration.GetSection(nameof(Configuration)));
 
         builder.Host.UseSerilog();
-        builder.Logging.ClearProviders();
-        builder.Logging.AddConsole();
-        builder.Logging.AddDebug();
+        builder.Logging
+            .ClearProviders()
+            .SetMinimumLevel(LogLevel.Debug)
+            .AddConsole()
+            .AddDebug();
 
         builder.Services.ConfigureHttpJsonOptions(options =>
         {
@@ -36,6 +41,12 @@ internal class Program
             options.UseNpgsql(builder.Configuration.GetConnectionString("Database"));
             //options.UseModel(ApplicationDbContextModel.Instance);
         });
+
+        builder.Services.AddKeyedSingleton<IDbConnectionFactory>(
+            DatabaseNames.Cardsy, 
+            (sp, o) => new NpgsqlDbConnectionFactory(builder.Configuration.GetConnectionString(nameof(DatabaseNames.Cardsy))));
+
+        builder.Services.AddScoped<IConcentrationService, ConcentrationService>();
 
         builder.Services.AddStackExchangeRedisCache(options =>
         {

@@ -3,6 +3,8 @@
     <ManagePackageVersionsCentrally>true</ManagePackageVersionsCentrally>
   </PropertyGroup>
   <ItemGroup>
+    <PackageVersion Include="Dapper" Version="2.1.66" />
+    <PackageVersion Include="Dapper.AOT" Version="1.0.48" />
     <PackageVersion Include="EntityFramework" Version="6.5.1" />
     <PackageVersion Include="Microsoft.AspNetCore.OpenApi" Version="9.0.3" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="9.0.3" />
@@ -14,7 +16,7 @@
     <PackageVersion Include="Microsoft.VisualStudio.Azure.Containers.Tools.Targets" Version="1.21.2" />
     <PackageVersion Include="Npgsql" Version="9.0.3" />
     <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="9.0.4" />
-    <PackageVersion Include="Scalar.AspNetCore" Version="2.1.4" />
+    <PackageVersion Include="Scalar.AspNetCore" Version="1.2.76" />
     <PackageVersion Include="Serilog" Version="4.2.0" />
     <PackageVersion Include="Serilog.AspNetCore" Version="9.0.0" />
     <PackageVersion Include="Serilog.Sinks.Console" Version="6.0.0" />

@@ -18,32 +18,33 @@ namespace Cardsy.API.Endpoints.Games.Concentration
             endpoints.MapGet("/{id}", Get);
             endpoints.MapPost("/create", Create);
             endpoints.MapDelete("/delete/{id}", Delete);
+            endpoints.MapPut("/{id}/update", Update);
         }
 
-        public static async Task<Ok<ConcentrationGame[]>> GetAll(
-            ApplicationDbContext db,
+        public static async Task<Ok<IEnumerable<ConcentrationGame>>> GetAll(
+            IConcentrationService service,
             CancellationToken cancellationToken,
             BoardSize? boardSize = null,
             int take = 200,
             int skip = 0)
         {
-            ConcentrationGame[] result = [];
+            IEnumerable<ConcentrationGame> result;
 
             if (boardSize.HasValue)
             {
-                result = await GetAllWithBoardSize(db, boardSize.Value, take, skip).ToArrayAsync(cancellationToken);
+                result = await service.GetAll((int)boardSize.Value, cancellationToken);
             }
             else
             {
-                result = await GetAllWithNoBoardSize(db, take, skip).ToArrayAsync(cancellationToken);
+                result = await service.GetAll(cancellationToken);
             }
 
             return TypedResults.Ok(result);
         }
 
-        public static readonly Func<ApplicationDbContext, BoardSize, int, int, IAsyncEnumerable<ConcentrationGame>> GetAllWithBoardSize
+        public static readonly Func<ApplicationDbContext, int, int, int, IAsyncEnumerable<ConcentrationGame>> GetAllWithBoardSize
             = EF.CompileAsyncQuery(
-                (ApplicationDbContext db, BoardSize size, int take, int skip)
+                (ApplicationDbContext db, int size, int take, int skip)
                 => db.ConcentrationGames.Where(c => c.Size == size).OrderBy(c => c.Id).Skip(skip).Take(take).AsNoTracking());
 
         public static readonly Func<ApplicationDbContext, int, int, IAsyncEnumerable<ConcentrationGame>> GetAllWithNoBoardSize
@@ -53,7 +54,7 @@ namespace Cardsy.API.Endpoints.Games.Concentration
 
         public static async Task<Results<Ok<ConcentrationGame>, NotFound>> Get(
             long id,
-            ApplicationDbContext db,
+            IConcentrationService service,
             IDistributedCache cache,
             CancellationToken cancellationToken
             )
@@ -76,7 +77,7 @@ namespace Cardsy.API.Endpoints.Games.Concentration
                     : TypedResults.Ok(result);
             }
 
-            result = await GetByIdWithNoTracking(db, id).SingleOrDefaultAsync(cancellationToken);
+            result = await service.Get(id, cancellationToken);
 
             if (result is not null)
             {
@@ -100,13 +101,13 @@ namespace Cardsy.API.Endpoints.Games.Concentration
 
         public static async Task<Results<Created<ConcentrationGame>, BadRequest<string>>> Create( 
             ConcentrationGame toCreate,
-            ApplicationDbContext db,
+            IConcentrationService service,
             CancellationToken cancellationToken
             )
         {
-            if (toCreate.Solution.Length != MapBoardSize(toCreate.Size))
+            if (toCreate.Solution.Length != MapBoardSize((BoardSize)toCreate.Size))
             {
-                return TypedResults.BadRequest($"Parameter 'Solution' (length: {toCreate.Solution.Length}) does not match 'Size' parameter ({MapBoardSize(toCreate.Size)})");
+                return TypedResults.BadRequest($"Parameter 'Solution' (length: {toCreate.Solution.Length}) does not match 'Size' parameter ({MapBoardSize((BoardSize)toCreate.Size)})");
             }
 
             if (!IsSolutionValid(toCreate.Solution))
@@ -114,17 +115,50 @@ namespace Cardsy.API.Endpoints.Games.Concentration
                 return TypedResults.BadRequest($"Parameter 'Solution' is invalid; A solution requies an array of integers such that each int must appear exactly twice");
             }
 
-            var check = await GetById(db, toCreate.Id).SingleOrDefaultAsync(cancellationToken);
+            var check = await service.Get(toCreate.Id, cancellationToken);
             if (check is not null)
             {
                 return TypedResults.BadRequest($"Parameter 'Id' is invalid; A game with that 'Id' already exists");
             }
 
-            db.ConcentrationGames.Add(toCreate);
-            await db.SaveChangesAsync(cancellationToken);
+            ConcentrationGame created = await service.Create(toCreate, cancellationToken);
 
-            return TypedResults.Created($"/{toCreate.Id}", toCreate);
+            return TypedResults.Created($"/{created.Id}", created);
         }
+
+        public static async Task<Results<Ok<ConcentrationGame>, NotFound, BadRequest<string>>> Update(
+            long id,
+            ConcentrationGame toUpdate,
+            IConcentrationService service,
+            CancellationToken cancellationToken
+            )
+        {
+            if (id != toUpdate.Id)
+            {
+                return TypedResults.BadRequest($"Parameter '{nameof(id)}' does not match field '{nameof(toUpdate.Id)}'");
+            }
+
+            var check = await service.Get(id, cancellationToken);
+            if (check is null)
+            {
+                return TypedResults.NotFound();
+            }
+
+            if (toUpdate.Solution.Length != MapBoardSize((BoardSize)toUpdate.Size))
+            {
+                return TypedResults.BadRequest($"Parameter '{nameof(toUpdate.Solution)}' (length: {toUpdate.Solution.Length}) does not match '{nameof(toUpdate.Size)}' parameter ({MapBoardSize((BoardSize)toUpdate.Size)})");
+            }
+
+            if (!IsSolutionValid(toUpdate.Solution))
+            {
+                return TypedResults.BadRequest($"Parameter '{nameof(toUpdate.Solution)}' is invalid; A solution requies an array of integers such that each int must appear exactly twice");
+            }
+
+            ConcentrationGame updated = await service.Update(toUpdate, cancellationToken);
+
+            return TypedResults.Ok(updated);
+        }
+
 
         public static async Task<Results<NoContent, NotFound>> Delete(
             long id,

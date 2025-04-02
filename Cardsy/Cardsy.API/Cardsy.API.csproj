@@ -13,6 +13,7 @@
 	
   <PropertyGroup>
   	<InterceptorsNamespaces>$(InterceptorsPreviewNamespaces);Microsoft.EntityFrameworkCore.GeneratedInterceptors</InterceptorsNamespaces>
+	<InterceptorsPreviewNamespaces>$(InterceptorsPreviewNamespaces);Dapper.AOT</InterceptorsPreviewNamespaces>
   </PropertyGroup>
 	
   <ItemGroup>
@@ -27,6 +28,8 @@
   </ItemGroup>
 	
   <ItemGroup>
+    <PackageReference Include="Dapper" />
+    <PackageReference Include="Dapper.AOT" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
@@ -56,7 +59,6 @@
 
   <ItemGroup>
     <Folder Include="Infrastructure\Cache\" />
-    <Folder Include="Infrastructure\Database\" />
   </ItemGroup>
 
 </Project>

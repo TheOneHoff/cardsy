@@ -10,7 +10,7 @@ namespace Cardsy.Data.Games.Concentration
         public long Id { get; set; }
 
         [Required]
-        public BoardSize Size { get; set; } = BoardSize._2x2;
+        public int Size { get; set; } = 1;
 
         [Required]
         public int[] Solution { get; set; } = [];

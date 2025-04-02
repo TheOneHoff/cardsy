@@ -1,16 +1,12 @@
-GET {{HostAddress}}/todos/
-Accept: application/json
-
-###
-
-GET {{HostAddress}}/todos/1
-Accept: application/json
-
+@Cardsy.API_HostAddress = https://localhost:5001
 ###
 
 GET {{HostAddress}}/games/concentration
 Accept: application/json
 
+###
+
+GET {{Cardsy.API_HostAddress}}/games/concentration/search
 ###
 
 GET {{HostAddress}}/games/concentration/1
@@ -29,3 +25,4 @@ Content-Type: application/json
 }
 
 ###
+

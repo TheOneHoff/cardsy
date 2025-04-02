@@ -8,6 +8,7 @@
   </PropertyGroup>
 	
   <ItemGroup>
+    <PackageReference Include="Dapper" />
     <PackageReference Include="EntityFramework" />
     <PackageReference Include="Microsoft.EntityFrameworkCore" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Design">
@@ -21,10 +22,6 @@
     <PackageReference Include="Npgsql" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
     <PackageReference Include="System.Linq.Async" />
-  </ItemGroup>
-	
-  <ItemGroup>
-    <Folder Include="Database\" />
   </ItemGroup>
 
 </Project>
